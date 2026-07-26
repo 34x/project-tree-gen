@@ -1,0 +1,18 @@
+# Project configuration — tree depth, exclusions, and per-directory annotations for AGENTS.md regeneration.
+#
+[comments]
+"AGENTS.md" = "Instructions for LLM agents"
+"gentree.toml.example" = "Example configuration with custom descriptions and annotations"
+
+[depth]
+# Default depth when no per-file override exists and no CLI arg is given.
+default = 5
+
+[exclude_from_tree]
+# Files hidden from the rendered tree but still usable as comment sources.
+patterns = ["__init__.py", '^\..*$']
+
+[comment_sources]
+# Files whose docstring becomes the parent directory's tree comment.
+# <dirname> is replaced with the actual directory name at runtime.
+patterns = ["__init__.py"]

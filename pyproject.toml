@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project-tree-gen"
+version = "0.1.0"
+description = "Regenerate the `## Folder structure` tree block in AGENTS.md files"
+readme = "README.md"
+license = { text = "GPL-3.0-only" }
+authors = [
+    { name = "Rudy Contributors" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Documentation",
+]
+requires-python = ">=3.11"
+
+[project.urls]
+Repository = "https://github.com/34x/project-tree-gen"
+
+[project.scripts]
+project-tree-gen = "project_tree_gen._cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

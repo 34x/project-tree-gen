@@ -1,0 +1,150 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# project-tree-gen configuration
+# ──────────────────────────────────────────────────────────────────────────────
+# Controls tree depth, exclusions, per-directory comments, and comment-source
+# file patterns for the `## Folder structure` block in AGENTS.md files.
+#
+# Place this file as `gentree.toml` in your project root and run:
+#   project-tree-gen --config gentree.toml
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+# ── [depth] ──────────────────────────────────────────────────────────────────
+# How many directory levels the tree walks.  CLI `--depth` overrides this.
+#
+#   default = 2   →  root + immediate children + grandchildren
+#   default = 1   →  only immediate children of the root
+#   default = 5   →  five levels deep
+#
+# Per-file overrides let you show more (or less) detail in specific AGENTS.md
+# files.  The key is the file's path relative to the project root.
+#
+# When the generator processes "crates/rudy/AGENTS.md", it starts from the
+# directory containing that file (crates/rudy/) and traverses N levels down
+# from there — so depth=4 shows children, grandchildren, great-grandchildren,
+# and great-great-grandchildren of crates/rudy/.
+#
+#   "crates/rudy/AGENTS.md" = 4
+#
+[depth]
+default = 2
+# "crates/rudy/AGENTS.md" = 4
+
+
+# ── [exclude] ────────────────────────────────────────────────────────────────
+# Additional patterns to exclude from the file-system walk (on top of the
+# built-in defaults: .git, target, node_modules, snapshots, .venv, __pycache__,
+# .pytest_cache, .egg-info, and all lock files like Cargo.lock, uv.lock, etc.).
+#
+# Patterns are **regular expressions** matched with `re.search()` against both
+# the basename and the full relative path.  This means:
+#
+#   '^docs/tasks/.*$'   matches  docs/tasks/anything   (full-path match)
+#   '.*\.log$'          matches  any file ending in .log at any depth
+#   '^\.vscode$'        matches  the basename .vscode  (directory or file)
+#
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║  TOML STRING QUOTING — CRITICAL                                        ║
+# ║                                                                        ║
+# ║  This file uses **single-quoted** strings for all regex patterns.      ║
+# ║  In TOML, single-quoted strings ('...') treat backslashes literally,   ║
+# ║  so '\.' is the regex \. (escaped dot).                                ║
+# ║                                                                        ║
+# ║  If you use double-quoted strings ("..."), backslash is an escape      ║
+# ║  character — you MUST write '\\' to get a single \ in the regex.       ║
+# ║  Writing "\." in a double-quoted string is a TOML syntax error.        ║
+# ║                                                                        ║
+# ║  ✅  Single-quoted:  '^\.vscode$'   → regex ^\.vscode$  (correct)    ║
+# ║  ✅  Double-quoted:  "^\\.vscode$"  → regex ^\.vscode$  (correct)    ║
+# ║  ❌  Double-quoted:  "^\.vscode$"   → TOML parse error (invalid \.)  ║
+# ║                                                                        ║
+# ║  TL;DR: Use single quotes for regex patterns — it's simpler.           ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+#
+[exclude]
+patterns = [
+    # Task-plan directories — the root tree should not list every individual task.
+    '^docs/tasks/.*$',
+    # Editor / IDE state
+    '^\.vscode$',
+    '^\.idea$',
+    # Editor / runtime logs
+    '.*\.log$',
+    # Build artifacts
+    '^dist$',
+    '^build$',
+    # Generated code
+    '^.*generated.*$',
+    # Agent skill directories
+    '^\.agents$',
+]
+
+
+# ── [exclude_from_tree] ──────────────────────────────────────────────────────
+# Files hidden from the rendered tree but still usable as comment sources.
+# Unlike [exclude], these patterns only affect the tree rendering — the files
+# are still read for their docstrings when resolving a parent directory's
+# comment.
+#
+# Patterns are **regular expressions** (same matching rules as [exclude]).
+#
+# Typical use: hide mod.rs, __init__.py, lib.rs, etc. from the tree because
+# their docstring is already shown as the parent directory's comment.
+#
+[exclude_from_tree]
+patterns = ['^mod\.rs$', '^__init__\.py$']
+
+
+# ── [comment_sources] ────────────────────────────────────────────────────────
+# Files whose first docstring / comment line becomes the parent directory's
+# tree annotation.  The tool looks for these files inside each directory, in
+# the order listed here (first match wins).
+#
+# ⚠  These are **literal filenames**, not regex patterns.  The special
+#    placeholder `<dirname>` is replaced with the actual directory name at
+#    runtime, so `<dirname>.rs` inside `foo/` matches `foo.rs`.
+#
+# These files are NOT automatically excluded from the tree — list them in
+# [exclude_from_tree] if you want them hidden.
+#
+# Default (when this section is absent):  ["mod.rs", "<dirname>.rs", "lib.rs", "main.rs"]
+#
+[comment_sources]
+patterns = ["mod.rs", "<dirname>.rs", "lib.rs", "main.rs", "__init__.py"]
+
+
+# ── [comments] ───────────────────────────────────────────────────────────────
+# Sidecar overrides for directory comments.  These take highest priority —
+# they win over any docstring or README/AGENTS.md heading.
+#
+# The key is the directory's path relative to the project root (no trailing
+# slash).  The value is the comment shown in the tree.
+#
+# Use this when:
+#   - The auto-detected comment is too vague or redundant.
+#   - The directory has no docstring-bearing files.
+#   - You want a human-friendly label that differs from the directory name.
+#
+[comments]
+# Top-level
+".agents" = "agent skills (auto-loaded by clients)"
+".cargo" = "cargo config (xtask alias, build settings)"
+".config" = "tool configs (nextest)"
+"crates" = "workspace crates"
+"docs" = "workspace docs (architecture, tasks, howtos, audits)"
+"scripts" = "developer and CI scripts"
+
+# Crate-level overrides — used by the root tree, where the auto-detected
+# AGENTS.md heading would be cleaned to just the crate name and would lose
+# the human-friendly description.
+"crates/rudy" = "core LLM agent / TUI / CLI application"
+"crates/rudy-markdown" = "pure markdown parsing crate"
+"crates/rudy-protocol" = "shared wire protocol types for server/client communication"
+"crates/rudy-tg-bot" = "telegram bot (connecting to core via http api)"
+"crates/xtask" = "CI task runner"
+
+# Directory overrides for a hypothetical monorepo layout
+"packages/ui" = "frontend UI component library"
+"packages/shared" = "shared types and utilities"
+"infra/ci" = "CI/CD pipeline definitions"
+"infra/docker" = "container build files"
